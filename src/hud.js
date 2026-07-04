@@ -1,5 +1,6 @@
 import { formatTime } from './course.js';
 import { PHYSICS } from './balloon.js';
+import { IS_TOUCH } from './touchcontrols.js';
 
 // DOM/canvas overlay HUD: altitude gauge, fuel bar, wind compass, race timer,
 // and current checkpoint. Replaces the temporary debug text.
@@ -30,7 +31,7 @@ export class HUD {
 
       <div class="powerup">
         <div class="pu-slot empty"><span class="pu-glyph">—</span></div>
-        <div class="pu-hint">[E] USE</div>
+        <div class="pu-hint">${IS_TOUCH ? 'TAP' : '[E] USE'}</div>
         <div class="pu-active hud-hidden"><span class="pu-active-name"></span><div class="pu-active-bar"><div class="pu-active-fill"></div></div></div>
       </div>
 

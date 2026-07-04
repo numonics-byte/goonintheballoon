@@ -3,6 +3,8 @@
 // zoom). Lines reveal with a typewriter effect; click / Space / Enter advances,
 // Esc or SKIP bails. Speaker names are colour-coded.
 
+import { IS_TOUCH } from './touchcontrols.js';
+
 const C = '/cutscenes/';
 
 // Per-speaker accent colours for the name tag.
@@ -105,7 +107,7 @@ export class CutscenePlayer {
         <div class="cs-box">
           <div class="cs-who"></div>
           <div class="cs-text"></div>
-          <div class="cs-next">CLICK / SPACE &rsaquo;</div>
+          <div class="cs-next">${IS_TOUCH ? 'TAP' : 'CLICK / SPACE'} &rsaquo;</div>
         </div>
       </div>
       <div class="cs-credit-text"></div>

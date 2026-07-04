@@ -313,7 +313,7 @@ canvas { display: block; }
 
 /* Card grid laid over the new level-select art — pushed below the title block
    (which ends ~22% down) so it never covers the logo/subtitle text. */
-.screen.cards-screen { justify-content: flex-start; padding-top: 25vh; }
+.screen.cards-screen { justify-content: flex-start; padding-top: 25vh; padding-bottom: env(safe-area-inset-bottom); }
 .screen.cards-screen .scrim {
   background: linear-gradient(180deg, rgba(8, 14, 30, 0.10), rgba(8, 14, 30, 0.42));
 }
@@ -397,6 +397,7 @@ canvas { display: block; }
   margin-top: 8px;
 }
 @media (max-width: 760px) { .course-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 400px) { .course-grid { grid-template-columns: 1fr; gap: 12px; } }
 .course-card {
   pointer-events: auto;
   cursor: pointer;
@@ -437,7 +438,7 @@ canvas { display: block; }
   border-radius: 16px;
   padding: 22px 30px;
   margin-top: 18px;
-  min-width: 320px;
+  min-width: min(320px, 90vw);
 }
 .panel h2 { margin: 0 0 12px; }
 .lb-row { display: flex; justify-content: space-between; gap: 24px; font-size: 16px; padding: 4px 0; }
@@ -609,7 +610,7 @@ canvas { display: block; }
   align-items: center;
   overflow: hidden;
   cursor: pointer;
-  padding: 0 0 6vh;
+  padding: 0 0 max(6vh, env(safe-area-inset-bottom));
 }
 .cutscene.hidden { display: none; }
 
@@ -665,7 +666,7 @@ canvas { display: block; }
 .cs-setting {
   max-width: 760px;
   margin: 0 auto 14px;
-  font-size: 15px;
+  font-size: clamp(14px, 2vw, 15px);
   font-style: italic;
   color: #e6eefc;
   text-align: center;
@@ -708,9 +709,12 @@ canvas { display: block; }
   color: #fff;
   border: 2px solid var(--panel-border);
   border-radius: 10px;
-  padding: 8px 16px;
+  padding: 12px 22px;
   font-weight: 800;
+  font-size: 14px;
   letter-spacing: 1px;
+  min-width: 44px;
+  min-height: 44px;
 }
 .cs-skip:hover { background: rgba(255, 255, 255, 0.2); }
 
@@ -734,3 +738,45 @@ canvas { display: block; }
   z-index: 2;
 }
 .cutscene.credit-mode .cs-credit-text { display: block; }
+
+/* ---------- Mobile optimizations ---------- */
+@media (max-width: 600px) {
+  /* Title screen: tighten button band */
+  .screen.title-screen .menu-list { margin-bottom: max(3vh, env(safe-area-inset-bottom)); }
+  .btn { min-width: min(280px, 85vw); padding: 12px 18px; }
+
+  /* Course select: less dead space above cards on short screens */
+  .screen.cards-screen { padding-top: max(14vh, 80px); }
+  .screen.cards-screen .course-card .preview { height: 42px; }
+
+  /* Cutscene dialogue box: tighter padding on narrow screens */
+  .cs-box { padding: 14px 14px 12px; }
+  .cs-setting { padding: 6px 12px; margin-bottom: 8px; }
+
+  /* Settings / soundtrack panels */
+  .panel { padding: 16px 16px; min-width: 0; }
+  .settings-row { gap: 12px; }
+  .settings-row input[type="range"] { width: 140px; }
+
+  /* HUD: nudge fuel bar and compass inward to avoid touch-control overlap */
+  .fuel { left: 16px; width: 160px; bottom: 120px; }
+  .compass { right: 16px; bottom: 120px; width: 88px; height: 88px; }
+  .compass .needle { height: 32px; }
+  .alt-gauge { left: 14px; height: 200px; }
+
+  /* Power-up slot: shift above touch controls */
+  .powerup { bottom: 110px; }
+  .pu-slot { width: 56px; height: 56px; border-radius: 12px; }
+}
+
+/* Portrait phones: cutscene video letterbox instead of cropping sides */
+@media (max-aspect-ratio: 3/4) {
+  .cs-video {
+    object-fit: contain;
+    background: #000;
+  }
+  .screen.title-screen .title-video {
+    object-fit: contain;
+    background: #000;
+  }
+}

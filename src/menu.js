@@ -191,7 +191,7 @@ export class Menus {
     ).join('');
     this._open(null, `
       <h1 class="game-title" style="font-size:clamp(24px,4vw,44px)">SOUNDTRACK</h1>
-      <div class="panel" style="max-height:62vh;overflow-y:auto;padding:12px 18px;min-width:380px;width:min(520px,90vw)">${rows}</div>
+      <div class="panel" style="max-height:62vh;overflow-y:auto;padding:12px 18px;width:min(520px,90vw)">${rows}</div>
       <div class="menu-list" style="margin-top:18px">
         <button class="btn ghost" data-act="back">BACK</button>
       </div>
@@ -297,7 +297,7 @@ export class Menus {
 
   _settingsBlock(s) {
     return `
-      <div class="panel" style="min-width:360px">
+      <div class="panel" style="width:min(360px,90vw)">
         <div class="settings-row">
           <span>Master Volume</span>
           <input type="range" min="0" max="1" step="0.05" value="${s.master}" data-set="master">
