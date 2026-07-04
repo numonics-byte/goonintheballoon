@@ -18,6 +18,7 @@ import { COURSES, getCourse } from './courses.js';
 import { PowerupSystem } from './powerups.js';
 import { CutscenePlayer, CUTSCENES } from './cutscene.js';
 import { LOGOS } from './logos.js';
+import { TouchControls, IS_TOUCH } from './touchcontrols.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 
@@ -131,6 +132,7 @@ class Game {
     this.powerups = new PowerupSystem(this.scene, this.hud, this.effects, this.audio);
     this.cutscene = new CutscenePlayer();
     this.cutscene.setAudio(this.audio);
+    this.touchControls = new TouchControls(this.input);
     this.introSeen = false;
     this.shownCutscenes = new Set();
 
@@ -237,7 +239,8 @@ class Game {
     this.menus.hide();
     this.hud.show();
     this.hud.showSplits([]);
-    this.hud.toast('W/S ALTITUDE · A/D STRAFE · SPACE FORWARD · E ITEM', 3000);
+    this.hud.toast(IS_TOUCH ? 'JOYSTICK · BOOST · ITEM' : 'W/S ALTITUDE · A/D STRAFE · SPACE FORWARD · E ITEM', 3000);
+    this.touchControls.show();
     this.audio.init();
     this.audio.startAmbient();
     this.audio.playTrack('race-' + this.course.id);
@@ -251,6 +254,7 @@ class Game {
     this.audio.stopAmbient();
     this.guideArrow.visible = false;
     this.hud.hide();
+    this.touchControls.hide();
 
     if (this.mode === 'timeattack') {
       const rank = addTime(this.course.id, this.tracker.finishTime);
@@ -287,10 +291,13 @@ class Game {
       }
     };
 
-    if (idx === 3) {
-      playOnce(CUTSCENES.outro, 'outro', show);
-    } else if (idx >= 0 && idx < 3) {
-      playOnce(CUTSCENES.mid[idx], 'cs' + idx, show);
+    if (idx >= 0 && idx < COURSES.length - 1) {
+      // Courses 0–2: play mid cutscene then auto-start the next level.
+      const next = COURSES[idx + 1];
+      playOnce(CUTSCENES.mid[idx], 'cs' + idx, () => this.startRace({ courseId: next.id, mode: this.mode }));
+    } else if (idx === COURSES.length - 1) {
+      // Final course (Tropical): outro → end credits → results screen.
+      playOnce(CUTSCENES.outro, 'outro', () => this.cutscene.play(CUTSCENES.end, show));
     } else {
       show();
     }
@@ -315,7 +322,7 @@ class Game {
   }
 
   togglePause() {
-    if (this.state === 'playing') { this.state = 'paused'; this.menus.showPause(); }
+    if (this.state === 'playing') { this.state = 'paused'; this.touchControls.hide(); this.menus.showPause(); }
     else if (this.state === 'paused') this.resume();
   }
   resume() {
@@ -323,11 +330,13 @@ class Game {
     this.state = 'playing';
     this.menus.hide();
     this.hud.show();
+    this.touchControls.show();
     this.clock.getDelta(); // discard time spent paused
   }
   quitToMenu() {
     this.state = 'title';
     this.hud.hide();
+    this.touchControls.hide();
     this.guideArrow.visible = false;
     this.audio.stopAmbient();
     this.menus.showCourseSelect(); // triggers menu-screen music

@@ -57,9 +57,9 @@ export const CUTSCENES = {
       ],
     },
     {
-      title: 'CUT SCENE 3 — THE DEATH ZONE',
+      title: 'CUT SCENE 4 — THE DEATH ZONE',
       music: 'cs-city',
-      video: C + 'cut_scene_3.mp4',
+      video: C + 'cut_scene_4.mp4',
       setting: 'The perilous, jagged peaks just below the summit. The air is thin. A massive, heavily armored dreadnought of a balloon blocks Joel\'s path. The Studio Exec, smoking a cigar despite the altitude, glares down at him.',
       lines: [
         { who: 'THE EXEC', text: "End of the line, kid. We own the distribution rights to this mountain rescue. Turn your little arts-and-crafts project around." },
@@ -71,6 +71,10 @@ export const CUTSCENES = {
       ],
     },
   ],
+  end: {
+    video: C + 'end_scene.mp4',
+    credit: 'THIS IS A CAN U FEEL IT GAMES PRODUCTION.',
+  },
   outro: {
     title: 'THE PEAK',
     music: 'cs-outro',
@@ -104,6 +108,7 @@ export class CutscenePlayer {
           <div class="cs-next">CLICK / SPACE &rsaquo;</div>
         </div>
       </div>
+      <div class="cs-credit-text"></div>
       <button class="cs-skip">SKIP &raquo;</button>
     `;
     document.body.appendChild(this.el);
@@ -115,6 +120,7 @@ export class CutscenePlayer {
     this.titleEl = this.el.querySelector('.cs-title');
     this.boxEl = this.el.querySelector('.cs-box');
     this.nextEl = this.el.querySelector('.cs-next');
+    this.creditEl = this.el.querySelector('.cs-credit-text');
 
     this.typing = false;
     this._typeTimer = null;
@@ -169,10 +175,18 @@ export class CutscenePlayer {
 
     this.titleEl.textContent = scene.title || '';
     this.settingEl.textContent = scene.setting || '';
-    this._advance();
+
+    if (scene.credit) {
+      this.el.classList.add('credit-mode');
+      this.creditEl.textContent = scene.credit;
+    } else {
+      this.el.classList.remove('credit-mode');
+      this._advance();
+    }
   }
 
   _advance() {
+    if (this.scene && this.scene.credit) { this._finish(); return; }
     if (this.typing) { this._completeTyping(); return; }
     this.i++;
     if (!this.scene || this.i >= this.scene.lines.length) { this._finish(); return; }
@@ -220,6 +234,7 @@ export class CutscenePlayer {
     if (this.el.classList.contains('hidden')) return;
     clearInterval(this._typeTimer);
     this.typing = false;
+    this.el.classList.remove('credit-mode');
     this.videoEl.pause();
     this.videoEl.removeAttribute('src');
     this.videoEl.style.display = 'none';

@@ -468,6 +468,79 @@ canvas { display: block; }
 }
 .strack-row.playing .strack-num::after { content: ' \25B6'; }
 
+/* ---------- Mobile touch controls ---------- */
+#touch-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 28px 28px calc(40px + env(safe-area-inset-bottom));
+}
+#touch-controls.tc-hidden { display: none; }
+
+.tc-joy-wrap { pointer-events: auto; touch-action: none; }
+
+.tc-joystick {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 0 0 8px rgba(0, 0, 0, 0.18);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tc-knob {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.52);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -26px 0 0 -26px;
+  will-change: transform;
+}
+
+.tc-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.tc-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.tc-btn:active { transform: scale(0.91); }
+.tc-boost { background: rgba(255, 90, 60, 0.22); border-color: var(--accent2); }
+.tc-item  { background: rgba(255, 204, 51, 0.18); border-color: var(--accent); width: 66px; height: 66px; }
+
 .settings-row {
   display: flex;
   align-items: center;
@@ -640,3 +713,24 @@ canvas { display: block; }
   letter-spacing: 1px;
 }
 .cs-skip:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* Credit-card end scene — hides dialogue, shows single centered line */
+.cutscene.credit-mode .cs-stage { display: none; }
+.cutscene.credit-mode .cs-title { display: none; }
+.cutscene.credit-mode .cs-skip  { display: none; }
+
+.cs-credit-text {
+  display: none;
+  position: absolute;
+  bottom: 10vh;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(11px, 1.8vw, 18px);
+  letter-spacing: 4px;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+  z-index: 2;
+}
+.cutscene.credit-mode .cs-credit-text { display: block; }
