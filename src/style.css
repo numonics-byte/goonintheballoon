@@ -1,0 +1,642 @@
+:root {
+  --accent: #ffcc33;
+  --accent2: #ff5a3c;
+  --panel: rgba(12, 18, 34, 0.78);
+  --panel-border: rgba(255, 255, 255, 0.14);
+  --good: #6bff8f;
+  --warn: #ffd23c;
+  --bad: #ff4d4d;
+  /* pixel fonts: blocky display + readable body (bundled via @fontsource) */
+  --font-display: "Press Start 2P", "Courier New", monospace;
+  --font-body: "VT323", "Courier New", monospace;
+  font-family: var(--font-body);
+}
+
+/* Retro pixel typography across the whole UI for a cohesive 16-bit look. */
+.game-title, .subtitle, .btn, .cs-title, .cs-who, .toast, .num,
+#hud .timer, #hud .checkpoint, #hud .place, .pu-glyph, .pu-hint,
+.fuel .cap, .compass .cap, .compass .n, .panel h2, .course-card .cname {
+  font-family: var(--font-display);
+  letter-spacing: 0;
+}
+/* body copy stays in the taller, more readable pixel font, sized up a touch */
+.cs-text, .cs-setting, .hint, .cdesc, .lb-row, .settings-row,
+.results-list, #hud .splits {
+  font-family: var(--font-body);
+}
+.cs-text { font-size: clamp(20px, 2.6vw, 30px); line-height: 1.25; }
+.cs-setting { font-size: 18px; }
+.hint { font-size: 22px; }
+.lb-row { font-size: 22px; }
+.course-card .cdesc { font-size: 14px; }
+/* keep pixel-art backplates crisp when scaled */
+.screen, .cs-bg, .level-img { image-rendering: pixelated; }
+
+/* Press Start 2P runs wide — trim sizes so labels don't overflow. */
+.btn { font-size: 13px; line-height: 1.6; }
+.toast { font-size: 20px; line-height: 1.5; }
+#hud .checkpoint { font-size: 13px; }
+#hud .timer { font-size: 26px; }
+#hud .place { font-size: 20px; }
+.cs-who { font-size: 12px; }
+.num { font-size: 13px; }
+.course-card .cname { font-size: 13px; line-height: 1.4; }
+.pu-glyph { font-size: 11px; }
+.pu-hint, .fuel .cap, .compass .cap, .compass .n { font-size: 10px; }
+.panel h2 { font-size: 15px; }
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #87ceeb;
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app { position: fixed; inset: 0; }
+
+canvas { display: block; }
+
+/* ---------- Debug / dev text ---------- */
+#debug {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  padding: 8px 12px;
+  font: 13px/1.5 "Courier New", monospace;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  white-space: pre;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* ---------- HUD ---------- */
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.hud-hidden { display: none !important; }
+
+#hud .timer {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 34px;
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+#hud .checkpoint {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  color: var(--accent);
+}
+
+#hud .place {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  font-size: 28px;
+  color: var(--accent);
+}
+
+/* altitude gauge (left) */
+.alt-gauge {
+  position: absolute;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 280px;
+  background: var(--panel);
+  border: 2px solid var(--panel-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.alt-gauge .fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(0deg, #3aa0ff, #9be7ff);
+  transition: height 0.08s linear;
+}
+.alt-gauge .label {
+  position: absolute;
+  bottom: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* fuel bar (bottom-left) */
+.fuel {
+  position: absolute;
+  left: 70px;
+  bottom: 28px;
+  width: 220px;
+}
+.fuel .track {
+  height: 18px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 2px solid var(--panel-border);
+  overflow: hidden;
+}
+.fuel .bar {
+  height: 100%;
+  width: 100%;
+  background: var(--good);
+  transition: width 0.1s linear, background 0.2s linear;
+}
+.fuel .cap { font-size: 12px; margin-bottom: 4px; opacity: 0.85; }
+
+/* wind compass (bottom-right) */
+.compass {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 2px solid var(--panel-border);
+}
+.compass .needle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 42px;
+  background: linear-gradient(0deg, transparent, var(--accent2));
+  transform-origin: bottom center;
+  transform: translate(-50%, -100%) rotate(0deg);
+}
+.compass .hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.compass .cap {
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+}
+.compass .n { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); font-size: 11px; opacity: 0.7; }
+
+#hud .splits {
+  position: absolute;
+  top: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: #cfe8ff;
+  text-align: center;
+}
+
+.toast {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 36px;
+  max-width: 90vw;
+  text-align: center;
+  line-height: 1.2;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.toast.show { opacity: 1; }
+
+/* ---------- Screen flash for checkpoint pulse ---------- */
+#flash {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 60;
+}
+
+/* ---------- Menus ---------- */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background-size: cover;
+}
+.screen.hidden { display: none; }
+
+/* Title screen: art already has the logo, so anchor the buttons near the
+   bottom (below the characters) and skip the dark scrim. */
+/* Title: show the full video uncropped at the top, buttons in the band below. */
+.screen.title-screen { justify-content: flex-end; padding: 0; background: transparent; }
+.screen.title-screen .scrim { background: transparent; }
+.screen.title-screen .title-video {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  object-position: top;
+  z-index: 0;
+  pointer-events: none;
+}
+.screen.title-screen .menu-list { position: relative; margin-bottom: 4vh; z-index: 1; }
+
+/* Course select: the four monitors in the artwork are the clickable targets. */
+.screen.level-screen { background: #0a1426; justify-content: center; }
+.screen.level-screen .scrim { background: transparent; }
+.level-stage { position: relative; line-height: 0; }
+.level-img {
+  display: block;
+  max-width: 100vw;
+  max-height: 100vh;
+  image-rendering: pixelated;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+.level-hot {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  background: transparent;
+  border: 3px solid transparent;
+  border-radius: 10px;
+  transition: background 0.1s, border-color 0.1s, box-shadow 0.1s, transform 0.08s;
+}
+.level-hot:hover, .level-hot:focus-visible {
+  background: rgba(255, 204, 51, 0.16);
+  border-color: var(--accent);
+  box-shadow: 0 0 22px rgba(255, 204, 51, 0.6), inset 0 0 18px rgba(255, 204, 51, 0.28);
+  transform: scale(1.03);
+  outline: none;
+}
+.screen.level-screen .level-back {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  min-width: 0;
+  padding: 10px 18px;
+  font-size: 16px;
+}
+
+/* Card grid laid over the new level-select art — pushed below the title block
+   (which ends ~22% down) so it never covers the logo/subtitle text. */
+.screen.cards-screen { justify-content: flex-start; padding-top: 25vh; }
+.screen.cards-screen .scrim {
+  background: linear-gradient(180deg, rgba(8, 14, 30, 0.10), rgba(8, 14, 30, 0.42));
+}
+.screen.cards-screen .course-grid { max-width: 780px; }
+.screen.cards-screen .course-card { padding: 10px; }
+.screen.cards-screen .course-card .preview { height: 56px; margin-bottom: 8px; }
+.screen.cards-screen .course-card .cdesc { font-size: 11px; }
+.level-back {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  min-width: 0;
+  padding: 10px 18px;
+  font-size: 16px;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 14, 30, 0.25), rgba(8, 14, 30, 0.72));
+}
+.screen > * { position: relative; z-index: 1; }
+
+.game-title {
+  font-size: clamp(40px, 8vw, 96px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin: 0;
+  line-height: 0.95;
+  color: #fff;
+  text-shadow: 0 4px 0 #1c2a4a, 0 0 24px rgba(255, 204, 51, 0.6);
+}
+.game-title .a { color: #ff5a3c; }
+.game-title .b { color: #ffcc33; }
+.game-title .c { color: #4ea3ff; }
+.subtitle {
+  font-size: clamp(16px, 2.4vw, 26px);
+  letter-spacing: 6px;
+  color: var(--accent);
+  margin: 8px 0 28px;
+  font-weight: 800;
+}
+
+.menu-list { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+
+.btn {
+  pointer-events: auto;
+  cursor: pointer;
+  min-width: 280px;
+  padding: 14px 26px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #102038;
+  background: linear-gradient(180deg, #ffe27a, #ffc23c);
+  border: 3px solid #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 0 #b9791d, 0 10px 22px rgba(0, 0, 0, 0.4);
+  transition: transform 0.06s, box-shadow 0.06s, filter 0.1s;
+}
+.btn:hover { filter: brightness(1.06); transform: translateY(-2px); }
+.btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #b9791d; }
+.btn.ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  box-shadow: none;
+  border-color: var(--panel-border);
+}
+
+.blink { animation: blink 1.1s steps(2, start) infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+.hint { margin-top: 26px; font-size: 18px; letter-spacing: 3px; color: #fff; }
+
+/* course select grid */
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 20px;
+  max-width: 980px;
+  margin-top: 8px;
+}
+@media (max-width: 760px) { .course-grid { grid-template-columns: repeat(2, 1fr); } }
+.course-card {
+  pointer-events: auto;
+  cursor: pointer;
+  background: var(--panel);
+  border: 3px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 12px;
+  transition: transform 0.08s, border-color 0.1s, box-shadow 0.1s;
+}
+.course-card:hover, .course-card.selected {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+}
+.course-card .preview {
+  height: 96px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+.course-card .num {
+  display: inline-block;
+  background: var(--accent);
+  color: #102038;
+  font-weight: 900;
+  border-radius: 6px;
+  padding: 0 8px;
+  margin-bottom: 6px;
+}
+.course-card .cname { font-weight: 800; font-size: 16px; }
+.course-card .cdesc { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+
+.row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+.panel {
+  background: var(--panel);
+  border: 2px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 22px 30px;
+  margin-top: 18px;
+  min-width: 320px;
+}
+.panel h2 { margin: 0 0 12px; }
+.lb-row { display: flex; justify-content: space-between; gap: 24px; font-size: 16px; padding: 4px 0; }
+.lb-row .rank { color: var(--accent); }
+.lb-row.best { color: var(--good); }
+
+.strack-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  pointer-events: auto;
+  font-family: var(--font-body);
+  font-size: 22px;
+  transition: background 0.1s;
+}
+.strack-row:hover { background: rgba(255, 255, 255, 0.07); }
+.strack-row.playing { color: var(--accent); background: rgba(255, 204, 51, 0.1); }
+.strack-num {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--accent);
+  min-width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.strack-row.playing .strack-num::after { content: ' \25B6'; }
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 10px 0;
+  pointer-events: auto;
+}
+.settings-row input[type="range"] { width: 180px; }
+
+.results-list { font-size: 20px; margin: 10px 0; }
+.results-list .me { color: var(--accent); font-weight: 900; }
+.results-time { font-size: 48px; font-weight: 900; color: var(--accent); margin: 6px 0 2px; }
+
+/* ---------- Power-up HUD slot ---------- */
+.powerup {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.pu-slot {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  background: var(--panel);
+  border: 3px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 18px rgba(255, 204, 51, 0.25);
+}
+.pu-slot.empty { border-color: var(--panel-border); box-shadow: none; opacity: 0.6; }
+.pu-glyph { font-size: 14px; font-weight: 900; letter-spacing: 1px; }
+.pu-hint { font-size: 12px; opacity: 0.8; letter-spacing: 1px; }
+.pu-active {
+  position: absolute;
+  bottom: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  text-align: center;
+}
+.pu-active-name { font-size: 13px; color: var(--accent); }
+.pu-active-bar {
+  height: 6px;
+  margin-top: 3px;
+  background: var(--panel);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.pu-active-fill { height: 100%; width: 100%; background: var(--accent); transition: width 0.1s linear; }
+
+/* ---------- Cutscenes ---------- */
+.cutscene {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0 0 6vh;
+}
+.cutscene.hidden { display: none; }
+
+/* image/gradient backplate with a slow Ken-Burns zoom */
+.cs-bg {
+  position: absolute;
+  inset: -4%;
+  background-size: cover !important;
+  background-position: center !important;
+  transform-origin: 50% 50%;
+  image-rendering: pixelated;
+  z-index: 0;
+}
+.cs-bg.kb { animation: kenburns 18s ease-out forwards; }
+
+.cs-video {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  object-position: top;
+  z-index: 0;
+  pointer-events: none;
+  display: none;
+}
+@keyframes kenburns {
+  from { transform: scale(1.04); }
+  to   { transform: scale(1.16); }
+}
+
+.cs-title {
+  position: absolute;
+  top: 7vh;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  text-align: center;
+  font-size: clamp(22px, 4vw, 40px);
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--accent);
+  text-shadow: 0 3px 0 #1c2a4a, 0 0 18px rgba(0, 0, 0, 0.6);
+}
+.cs-stage {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.cs-setting {
+  max-width: 760px;
+  margin: 0 auto 14px;
+  font-size: 15px;
+  font-style: italic;
+  color: #e6eefc;
+  text-align: center;
+  opacity: 0.95;
+  padding: 8px 18px;
+  background: rgba(6, 10, 22, 0.4);
+  border-radius: 10px;
+}
+.cs-box {
+  width: min(820px, 92vw);
+  background: rgba(10, 16, 32, 0.92);
+  border: 3px solid var(--accent);
+  border-radius: 16px;
+  padding: 18px 22px 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.cs-box.narration { border-color: var(--panel-border); }
+.cs-who {
+  display: inline-block;
+  background: var(--accent);
+  color: #102038;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 2px 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+.cs-box.narration .cs-who { background: #3a4a66; color: #fff; }
+.cs-text { font-size: clamp(16px, 2.2vw, 22px); line-height: 1.4; color: #fff; min-height: 2.6em; }
+.cs-box.narration .cs-text { font-style: italic; color: #d6e2f5; }
+.cs-next { margin-top: 12px; text-align: right; font-size: 13px; letter-spacing: 2px; color: var(--accent); opacity: 0; transition: opacity 0.2s; }
+.cs-skip {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 2px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.cs-skip:hover { background: rgba(255, 255, 255, 0.2); }
