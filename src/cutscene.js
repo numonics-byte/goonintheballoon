@@ -59,9 +59,9 @@ export const CUTSCENES = {
       ],
     },
     {
-      title: 'CUT SCENE 4 — THE DEATH ZONE',
+      title: 'CUT SCENE 3 — THE DEATH ZONE',
       music: 'cs-city',
-      video: C + 'cut_scene_4.mp4',
+      video: C + 'cut_scene_3.mp4',
       setting: 'The perilous, jagged peaks just below the summit. The air is thin. A massive, heavily armored dreadnought of a balloon blocks Joel\'s path. The Studio Exec, smoking a cigar despite the altitude, glares down at him.',
       lines: [
         { who: 'THE EXEC', text: "End of the line, kid. We own the distribution rights to this mountain rescue. Turn your little arts-and-crafts project around." },
@@ -80,7 +80,7 @@ export const CUTSCENES = {
   outro: {
     title: 'THE PEAK',
     music: 'cs-outro',
-    image: C + 'outro_scene.jpeg',
+    video: C + 'cut_scene_4.mp4',
     setting: 'The serene, sunlit summit beside the GOON CAVE sign, a fairytale castle far below. Asa Akira huddles in a heavy red parka, thoroughly annoyed. Joel touches down and falls to one knee.',
     lines: [
       { who: 'JOEL', text: "M'lady. The industry tried to stop me, but I have braved the elements to secure your safety." },
