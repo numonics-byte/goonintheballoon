@@ -30,8 +30,8 @@ class Game {
 
     this._initRenderer();
     this._initScene();
-    this._initSystems();
     this._initInput();
+    this._initSystems();
 
     this.menus.showTitle();
 
